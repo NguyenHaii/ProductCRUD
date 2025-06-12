@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Product CRUD</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4 text-center">Quản lý Sản phẩm</h1>
+
+    <form id="productForm" class="bg-white p-4 rounded shadow mb-6">
+      <div class="grid grid-cols-2 gap-4">
+        <input type="text" id="Id" placeholder="Mã sản phẩm" required class="border p-2 rounded" />
+        <input type="text" id="Title" placeholder="Tên sản phẩm" required class="border p-2 rounded" />
+        <input type="number" id="Price" placeholder="Giá" required class="border p-2 rounded" />
+        <input type="date" id="IDate" placeholder="Ngày nhập" required class="border p-2 rounded" />
+        <input type="number" id="Quantity" placeholder="Số lượng" required class="border p-2 rounded" />
+        <button type="submit" class="bg-blue-500 text-white rounded p-2 col-span-2 hover:bg-blue-600">Lưu sản phẩm</button>
+      </div>
+    </form>
+
+    <div id="productList" class="space-y-4"></div>
+  </div>
+
+  <script>
+    const apiUrl = '/products';
+    const form = document.getElementById('productForm');
+    const productList = document.getElementById('productList');
+
+    const fetchProducts = async () => {
+      const res = await fetch(apiUrl);
+      const products = await res.json();
+      productList.innerHTML = '';
+      products.forEach(product => {
+        productList.innerHTML += `
+          <div class="bg-white p-4 rounded shadow flex justify-between items-center">
+            <div>
+              <p><strong>Mã Sản Phẩm:</strong> ${product.Id}</p>
+              <p><strong>Tên:</strong> ${product.Title}</p>
+              <p><strong>Giá:</strong> ${product.Price.toLocaleString()} VNĐ</p>
+              <p><strong>Ngày nhập:</strong> ${new Date(product.IDate).toLocaleDateString()}</p>
+              <p><strong>Số lượng:</strong> ${product.Quantity}</p>
+            </div>
+            <div class="space-x-2">
+              <button onclick='editProduct(${JSON.stringify(product)})' class="bg-yellow-400 px-3 py-1 rounded">Sửa</button>
+              <button onclick="deleteProduct('${product.Id}')" class="bg-red-500 text-white px-3 py-1 rounded">Xóa</button>
+            </div>
+          </div>
+        `;
+      });
+    };
+
+    form.addEventListener('submit', async e => {
+      e.preventDefault();
+      const product = {
+        Id: form.Id.value.trim(),
+        Title: form.Title.value.trim(),
+        Price: parseFloat(form.Price.value),
+        IDate: form.IDate.value,
+        Quantity: parseInt(form.Quantity.value),
+      };
+
+      const res = await fetch(`${apiUrl}/${product.Id}`, { method: 'GET' });
+      const method = res.status === 200 ? 'PUT' : 'POST';
+
+      await fetch(method === 'POST' ? apiUrl : `${apiUrl}/${product.Id}`, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(product)
+      });
+
+      form.reset();
+      fetchProducts();
+    });
+
+    const deleteProduct = async (id) => {
+      if (confirm(`Xác nhận xóa sản phẩm ${id}?`)) {
+        await fetch(`${apiUrl}/${id}`, { method: 'DELETE' });
+        fetchProducts();
+      }
+    };
+
+    const editProduct = (product) => {
+      form.Id.value = product.Id;
+      form.Title.value = product.Title;
+      form.Price.value = product.Price;
+      form.IDate.value = product.IDate.split('T')[0];
+      form.Quantity.value = product.Quantity;
+    };
+
+    fetchProducts();
+  </script>
+</body>
+</html>
