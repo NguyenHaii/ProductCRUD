@@ -9,7 +9,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 
-// Đường dẫn Client chính xác:
 app.use(express.static(path.join(__dirname, '..', 'Client')));
 
 connectDB();
